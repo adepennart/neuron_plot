@@ -27,11 +27,13 @@ Procedure:
 Usage:
     python3 plot_pymaid.py
 known error:
+    1. make finding neuron default, but if annotation and neuron not found, error, have to make i find list or not
     1. should put user input for neuron
     2. should check both name of neurons and annotations
     3. should put user input for volume
     4. options of colour, azimuth and elevation angles
     3. perhaps option of saving
+    5. set get annotation and name pf neuron as regex
  """
 
 # Press the green button in the gutter to run the script.
@@ -39,63 +41,120 @@ if __name__ == '__main__':
     #fix it so it displays name of file here
     print('using plot_pymaid.py as main script')
 
-import sys
-from pathlib import Path
+# import modules
+# ----------------------------------------------------------------------------------------
+import re  # module for using regex
+import argparse #module for terminal use
 import pymaid
 import pandas
 import matplotlib.pyplot as plt
 import navis
 
-# allows for different file names to be adjusted easily for user
-outputfile = 'neuron_fig1.png'
+#argparse
+# ----------------------------------------------------------------------------------------
+#program description
+usage='plots a 2D representation of the neurons of interest'
+parser=argparse.ArgumentParser(description=usage)#create an argument parser
+req_arg= parser.add_argument_group(title="required arguments")
+#creates the argument for program version
+parser.add_argument('-v', '--version',
+                    action='version',
+                    version='%(prog)s 1.0')
+#make sure number
+#
+req_arg.add_argument('-p', '--project_id',
+                    metavar='PROJECT_ID',
+                    dest='project_id',
+                    required=True,
+                    help='user-specified project id (ie. lamarcki_OV)')
+#
+#this needs to be updated
+req_arg.add_argument('-n', '--NEURON',
+                    metavar='NEURON',
+                    dest='neuron',
+                    nargs='+',
+                    required=True,
+                    help='user-specified Neuron(s) of interest')
+#this needs to be updated
+req_arg.add_argument('-a', '--ANNOTATION',
+                    dest='annotation',
+                    action = 'store_true',
+                    help='If looking through annotations and not neuron name, please select')
+#creates the optinal argument for output file name
+parser.add_argument('-o', '--output',
+                    metavar='OUTPUT',
+                    dest='outputfile',
+                    help='optional genome assembled outputfile')
+args=parser.parse_args()#parses command line
 
-# uses the files specified by user
-if len(sys.argv) == 1:
-   outputfile = outputfile
+#functions
+# ----------------------------------------------------------------------------------------
 
-# exits script if unexpected arguments in commandline.
-else:
+# print_to_output
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# input variables:
+    # genone_id_dict:
+        # a dictionary of each species and a list of all genome ids
+    #outputfile:
+        # name of output file
+# use:
+    # when outputfile specified creates an output file of all species and the genome ids
+# return:
+    # no return
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+def print_to_output(outputfile=None):
     try:
-        raise ArithmeticError
-    except:
-        print("wrong number of arguments, try again")
-        exit()
+        plt.savefig(f'{outputfile}.pdf', transparent=True)
+    except TypeError:
+        pass
 
-try:
-    while 1:
-        user=input('Would you like to use the lamarckii_OV stack as default(y/n)?\n')
-        user=user.upper()
-        if user.upper() == 'N' or user.upper() == 'NO':
-            PROJECT_ID=input("type project_id of interest\n")
-            break
-        elif user.upper() == 'Y' or user.upper() == 'YES':
-            PROJECT_ID =11
-            break
-except KeyError:
-    print('not a string')
-    exit()
+def neuron_by_annotation(annotation=None):
+    skids = pymaid.get_skids_by_annotation(annotation)
+    # print(skids)
+    nl = pymaid.get_neurons(skids)
+    # print(nl)
+    return nl
+
+#regex
+def neuron_by_name(neuron=None):
+    nl = pymaid.get_neurons(neuron)
+    # nl = pymaid.get_neurons(/EPG*)
+    # print(nl)
+    return nl
+
+def colour_neuron(neuron_list=None,colour=None):
+    cmap = {}
+    var_type=str(type(neuron_list.id))
+    print(neuron_list)
+    print(var_type)
+    if var_type == "<class 'numpy.ndarray'>":
+        for neuron in range(0,len(neuron_list.id)):
+            cmap[neuron_list[neuron].id]= colour,
+    elif not var_type == "<class 'numpy.ndarray'>":
+        cmap[neuron_list.id] = colour,
+    return cmap
+
 
 #variables
+# ----------------------------------------------------------------------------------------
 cmap ={}
 
+# main code
+# --------------------------------------------------------------------------------------
+rm = pymaid.connect_catmaid(project_id=args.project_id)
 
-rm = pymaid.connect_catmaid(project_id=PROJECT_ID)
+print(args.neuron)
 
+#specify by colour
+if args.annotation:
+    nl=neuron_by_annotation(args.neuron)
+elif not args.annotation:
+    nl = neuron_by_name(args.neuron)
 
-skids = pymaid.get_skids_by_annotation(['EPG','PEN'])
-print(skids)
-
-nl = pymaid.get_neurons(skids)
-# print(nl)
-for neuron in range(0,4):
-    cmap[nl[neuron].id]= (0,0,1),
-cmap[nl[4].id]= (1,0,0)
-print(cmap)
+cmap=colour_neuron(nl,(0,0,1))
 
 #if getting by neuron name
 # nl = pymaid.get_neurons(/EPG*)
-
-
 
 # # Retrieve volume
 # vol = pymaid.get_volume(['EB','PB'])
@@ -125,9 +184,8 @@ for angle in range (0, 360, -87):
 for angle in range (0, 360, -73):
     ax.elev= angle
 
-plt.savefig('figure_1.pdf', transparent=True)
+print_to_output(args.outputfile)
 plt.show()
 
-# output = open(outputfile, 'w')
-# print(plt, file=output)
-# output.close()
+
+
