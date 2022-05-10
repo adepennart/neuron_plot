@@ -76,10 +76,17 @@ req_arg.add_argument('-n', '--NEURON',
                     required=True,
                     help='user-specified Neuron(s) of interest')
 #this needs to be updated
-req_arg.add_argument('-a', '--ANNOTATION',
+parser.add_argument('-a', '--ANNOTATION',
                     dest='annotation',
                     action = 'store_true',
                     help='If looking through annotations and not neuron name, please select')
+#this needs to be updated
+#is there a way to verifying same number of arguments in colour and neuron>
+parser.add_argument('-c', '--COLOUR',
+                    metavar='COLOUR',
+                    dest='colour',
+                    nargs='+',
+                    help='What colours you want to change to')
 #creates the optinal argument for output file name
 parser.add_argument('-o', '--output',
                     metavar='OUTPUT',
@@ -108,27 +115,51 @@ def print_to_output(outputfile=None):
     except TypeError:
         pass
 
+#make dictionary of neuron type and colour
+#create neurons
+#crreate dictionary of neuron id and associated colour
+
 def neuron_by_annotation(annotation=None):
-    skids = pymaid.get_skids_by_annotation(annotation)
-    # print(skids)
-    nl = pymaid.get_neurons(skids)
     # print(nl)
-    return nl
+    cmap = {}
+    if isinstance(annotation,dict):
+        nl = pymaid.CatmaidNeuronList(None)
+        for key, value in annotation.items():
+            skids = pymaid.get_skids_by_annotation(key)
+            # print(skids)
+            tempnl = pymaid.get_neurons(skids)
+            # print(tempnl.id)
+            #going to make a nested forloop, sorry
+            # print(value)
+            tempcmap=colour_neuron(tempnl,value)
+            nl += tempnl
+            cmap= {**cmap,**tempcmap}
+        # print(cmap)
+    elif isinstance(annotation,list):
+        skids = pymaid.get_skids_by_annotation(annotation)
+        nl = pymaid.get_neurons(skids)
+    # print(nl)
+    return nl, cmap
 
 #regex
-def neuron_by_name(neuron=None):
-    nl = pymaid.get_neurons(neuron)
-    # nl = pymaid.get_neurons(/EPG*)
+def neuron_by_name(neuron_list=None):
+    nl= pymaid.CatmaidNeuronList(None)
+    for neuron in neuron_list:
+        nl += pymaid.get_neurons(neuron)
+        # nl = pymaid.get_neurons(/EPG*)
     # print(nl)
     return nl
 
 def colour_neuron(neuron_list=None,colour=None):
     cmap = {}
     var_type=str(type(neuron_list.id))
-    print(neuron_list)
-    print(var_type)
+    # print(neuron_list)
+    # print(var_type)
+    print(colour)
+    # colour=int(colour)
     if var_type == "<class 'numpy.ndarray'>":
         for neuron in range(0,len(neuron_list.id)):
+            # cmap[neuron_list[neuron].id]= colour,
             cmap[neuron_list[neuron].id]= colour,
     elif not var_type == "<class 'numpy.ndarray'>":
         cmap[neuron_list.id] = colour,
@@ -141,17 +172,56 @@ cmap ={}
 
 # main code
 # --------------------------------------------------------------------------------------
+colour=(0,0,1),
+print(colour[0])
+# print(args.neuron)
+neuron=args.neuron
+
+type_col_dict={}
+num_list=[]
+if args.colour:
+    # colour_list=args.colour
+    colour_list=[]
+    for colour in args.colour:
+        print(colour)
+        for object in colour:
+            # print(object)
+            try:
+                if int(object):
+                    object=int(object)
+                    print(object)
+                    num_list.append(object)
+                elif object == '0':
+                    object=int(object)
+                    print(object)
+                    num_list.append(object)
+            except ValueError:
+                pass
+        num_tup=tuple(num_list)
+        colour_list.append(num_tup)
+        num_list=[]
+    print(colour_list)
+    for number in range(0,len(neuron)):
+        if len(neuron) != len(colour_list):
+            print("same number of neurons and colours needed")
+            exit()
+        elif len(neuron) == len(colour_list):
+            type_col_dict[neuron[number]]=colour_list[number]
+    # print(type_col_dict)
+
 rm = pymaid.connect_catmaid(project_id=args.project_id)
 
-print(args.neuron)
 
 #specify by colour
 if args.annotation:
-    nl=neuron_by_annotation(args.neuron)
+    if type_col_dict:
+        nl_cmap=neuron_by_annotation(type_col_dict)
+    elif not type_col_dict:
+        nl_cmap = neuron_by_annotation(args.neuron)
 elif not args.annotation:
-    nl = neuron_by_name(args.neuron)
+    nl = neuron_by_name(type_col_dict)
 
-cmap=colour_neuron(nl,(0,0,1))
+# cmap=colour_neuron(nl,(0,0,1))
 
 #if getting by neuron name
 # nl = pymaid.get_neurons(/EPG*)
@@ -172,20 +242,34 @@ cmap=colour_neuron(nl,(0,0,1))
 # fig, ax = navis.plot2d([nl ,vol['EB'],vol['PB']], method='3d_complex')
 # ax.dist = 6
 # plt.show()
-
+print(nl_cmap)
 #plot using matplot
-fig, ax = navis.plot2d(nl, color=cmap, method ='3d_complex')
-#zoom
-ax.dist = 6
-#adjust perspective
-for angle in range (0, 360, -87):
-    ax.azim= angle
+if type_col_dict:
+    fig, ax = navis.plot2d(nl_cmap[0], color=nl_cmap[1], method ='3d_complex')
+    # zoom
+    ax.dist = 6
+    # adjust perspective
+    for angle in range(0, 360, -87):
+        ax.azim = angle
 
-for angle in range (0, 360, -73):
-    ax.elev= angle
+    for angle in range(0, 360, -73):
+        ax.elev = angle
 
-print_to_output(args.outputfile)
-plt.show()
+    print_to_output(args.outputfile)
+    plt.show()
+elif not type_col_dict:
+    fig, ax = navis.plot2d(nl_cmap[0],  method='3d_complex')
+    #zoom
+    ax.dist = 6
+    #adjust perspective
+    for angle in range (0, 360, -87):
+        ax.azim= angle
+
+    for angle in range (0, 360, -73):
+        ax.elev= angle
+
+    print_to_output(args.outputfile)
+    plt.show()
 
 
 
