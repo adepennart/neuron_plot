@@ -28,16 +28,10 @@ Usage:
     python3 plot_pymaid.py
 known error:
     1. make finding neuron default, but if annotation and neuron not found, error, have to make i find list or not
-    1. should put user input for neuron
-    2. should check both name of neurons and annotations
-    3. should put user input for volume
     4. options of colour, azimuth and elevation angles
-    3. perhaps option of saving
-    5. set get annotation and name pf neuron as regex
     6. configuration file json
         https://stackoverflow.com/questions/11154946/require-either-of-two-arguments-using-argparse
-    7. change volume colour
-    8. not able to deal with transparency (ie. for volumes)
+    9. need some threshold, so not to break computer
  """
 
 # Press the green button in the gutter to run the script.
@@ -78,7 +72,7 @@ req_arg.add_argument('-n', '--neuron',
                     dest='neuron',
                     nargs='+',
                     required=True,
-                    help='user-specified Neuron(s) of interest')
+                    help='user-specified Neuron(s) of interest. REGEX accepted. ')
 #this needs to be updated
 parser.add_argument('-s', '--volume',
                     metavar='VOLUME',
@@ -89,13 +83,13 @@ parser.add_argument('-s', '--volume',
 parser.add_argument('-a', '--annotation',
                     dest='annotation',
                     action = 'store_true',
-                    help='If looking through annotations and not neuron name, please select')
+                    help='If looking through annotations and not neuron name, please select. REGEX accepted.')
 #this needs to be updated
 parser.add_argument('-c', '--colour',
                     metavar='COLOUR',
                     dest='colour',
                     nargs='+',
-                    help='User-specified neuron colours, currently only RGBA argument accepted (ie. 0,1,0)')
+                    help='User-specified neuron colours, currently only RGBA argument accepted (ie. 0,1,0,.1)')
 #this needs to be updated
 parser.add_argument('-f', '--volume_colour',
                     metavar='VOLUME_COLOUR',
@@ -141,7 +135,7 @@ def neuron_by_annotation(annotation=None):
     if isinstance(annotation,dict):
         nl = pymaid.CatmaidNeuronList(None)
         for key, value in annotation.items():
-            skids = pymaid.get_skids_by_annotation(key)
+            skids = pymaid.get_skids_by_annotation(f'/{key}')
             # print(skids)
             tempnl = pymaid.get_neurons(skids)
             # print(tempnl.id)
@@ -152,7 +146,7 @@ def neuron_by_annotation(annotation=None):
             cmap= {**cmap,**tempcmap}
         # print(cmap)
     elif isinstance(annotation,list):
-        skids = pymaid.get_skids_by_annotation(annotation)
+        skids = pymaid.get_skids_by_annotation(f'/{annotation}')
         nl = pymaid.get_neurons(skids)
     # print(nl)
     return nl, cmap
@@ -163,7 +157,8 @@ def neuron_by_name(neuron_list=None):
     if isinstance(neuron_list, dict):
         nl = pymaid.CatmaidNeuronList(None)
         for key, value in neuron_list.items():
-            tempnl = pymaid.get_neurons(key)
+            #regex inserted
+            tempnl = pymaid.get_neurons(f'/{key}')
             # print(tempnl.id)
             # going to make a nested forloop, sorry
             # print(value)
@@ -172,27 +167,20 @@ def neuron_by_name(neuron_list=None):
             cmap = {**cmap, **tempcmap}
         # print(cmap)
     elif isinstance(neuron_list, list):
-        nl = pymaid.get_neurons(neuron_list)
+        nl = pymaid.get_neurons(f'/{neuron_list}')
     # print(nl)
     return nl, cmap
 
-def volume_build(volume_list=None,colour=None):
+def volume_build(volume_col_dict=None):
     vol_list=[]
-    # Retrieve volume
-    vol = pymaid.get_volume(volume_list)
-    vol_type = str(type(vol))
-    # Set color and alpha
-    print(type(vol))
-    if isinstance(vol, dict):
-        for key, value in vol.items():
-            if colour:
-                value.color = colour
-            vol_list.append(value)
-    elif vol_type == "<class 'navis.core.volumes.Volume'>":
-        if colour:
-            vol.color = colour
-        vol_list.append(vol)
-    print(vol_list)
+    for key, value in volume_col_dict.items():
+        # print(key, value)
+        # Retrieve volume
+        vol = pymaid.get_volume(key)
+        if value:
+            vol.color = value
+            vol_list.append(vol)
+    # print(vol_list)
     return vol_list
 
 def colour_neuron(neuron_list=None,colour=None):
@@ -210,6 +198,48 @@ def colour_neuron(neuron_list=None,colour=None):
         cmap[neuron_list.id] = colour,
     return cmap
 
+def colour_parser(colour_choice=None, num_check=None):
+    type_col_dict = {}
+    num_list = []
+    # colour_list=args.colour
+    colour_list = []
+    for colour in colour_choice:
+        # print(colour)
+        match = re.findall('\.\d|\d', colour)
+        # print(match)
+        match=[float(x) for x in match]
+        print(match)
+        # match="".join(match)
+        # print(match)
+        # for object in colour:
+        #     # print(object)
+        #     try:
+        #         # add option for finding .
+        #         # perhaps a regex would work better here
+        #         if int(object):
+        #             object = int(object)
+        #             # print(object)
+        #             num_list.append(object)
+        #         elif object == '0':
+        #             object = int(object)
+        #             # print(object)
+        #             num_list.append(object)
+        #     except ValueError:
+        #         pass
+        num_tup = tuple(match)
+        # print(num_tup)
+        colour_list.append(num_tup)
+        num_list = []
+    # print(colour_list)
+    for number in range(0,len(num_check)):
+        if len(num_check) != len(colour_list):
+            print("same number of neurons and colours needed")
+            exit()
+        elif len(num_check) == len(colour_list):
+            type_col_dict[num_check[number]]=colour_list[number]
+    # print(type_col_dict)
+    return type_col_dict
+
 def angle_build(axis=None, distance=None,azimuth=None, elevation=None):
     # zoom
     axis.dist = distance
@@ -223,7 +253,7 @@ def angle_build(axis=None, distance=None,azimuth=None, elevation=None):
 def figure_build(neuron_list=None,volume=None):#colour=None):
     if volume:
         if neuron_list[1]:
-            print([neuron_list[0], volume],)
+            # print([neuron_list[0], volume],)
             fig, ax = navis.plot2d([neuron_list[0], volume], color=neuron_list[1], method='3d_complex')
             #angle don't work
             #doesn\t work with multiple volumes
@@ -235,7 +265,6 @@ def figure_build(neuron_list=None,volume=None):#colour=None):
         if neuron_list[1]:
             fig, ax = navis.plot2d(neuron_list[0], color=neuron_list[1], method='3d_complex')
             ax = angle_build(ax, 6, -87, -73)
-            # print(fig.color)
         elif not neuron_list[1]:
             fig, ax = navis.plot2d(neuron_list[0], method='3d_complex')
             ax = angle_build(ax, 6, -87, -73)
@@ -249,44 +278,14 @@ num_list=[]
 
 # main code
 # --------------------------------------------------------------------------------------
-neuron=args.neuron
 
-type_col_dict={}
-num_list=[]
+#is this needed?
 if args.colour:
-    # colour_list=args.colour
-    colour_list=[]
-    for colour in args.colour:
-        # print(colour)
-        for object in colour:
-            # print(object)
-            try:
-                #add option for finding .
-                #perhaps a regex would work better here
-                if int(object):
-                    object=int(object)
-                    # print(object)
-                    num_list.append(object)
-                elif object == '0':
-                    object=int(object)
-                    # print(object)
-                    num_list.append(object)
-            except ValueError:
-                pass
-        num_tup=tuple(num_list)
-        colour_list.append(num_tup)
-        num_list=[]
-    # print(colour_list)
-    for number in range(0,len(neuron)):
-        if len(neuron) != len(colour_list):
-            print("same number of neurons and colours needed")
-            exit()
-        elif len(neuron) == len(colour_list):
-            type_col_dict[neuron[number]]=colour_list[number]
-    # print(type_col_dict)
+    type_col_dict=colour_parser(args.colour, args.neuron)
 
 rm = pymaid.connect_catmaid(project_id=args.project_id)
 
+#might not need to
 #specify by colour
 if args.annotation:
     if type_col_dict:
@@ -301,77 +300,11 @@ elif not args.annotation:
 
 if args.volume:
     #no if statement needed, even when no args.volume_colour provided
-    volume=volume_build(args.volume,args.volume_colour)
+    vol_colour_dict=colour_parser(args.volume_colour, args.volume)
+    # print(colour_list)
+    volume=volume_build(vol_colour_dict)
     # elif not args.volume_colour:
     #     volume = volume_build(args.volume, args.volume_colour)
     figure_build(nl_cmap,volume)
 elif not args.volume:
     figure_build(nl_cmap)
-
-# # Retrieve volume
-# vol = pymaid.get_volume(['EB','PB'])
-#
-# # Set color and alpha
-# print(vol)
-# # vol.color = (0, 1, 0, .1)
-# for key,value in vol.items():
-#     value.color = (0, 1, 0, .1)
-# # vol[1].color = (0, 1, 0, .1)
-# print(vol['EB'])
-# # print(vol.items(0))
-
-# # Plot
-# fig, ax = navis.plot2d([nl ,vol['EB'],vol['PB']], method='3d_complex')
-# ax.dist = 6
-# plt.show()
-# print(nl_cmap)
-#plot using matplot
-# if args.vol:
-#     if type_col_dict:
-#         fig, ax = navis.plot2d(nl_cmap[0], color=nl_cmap[1], method ='3d_complex')
-#         # zoom
-#         ax.dist = 6
-#         # adjust perspective
-#         for angle in range(0, 360, -87):
-#             ax.azim = angle
-#         for angle in range(0, 360, -73):
-#             ax.elev = angle
-#         print_to_output(args.outputfile)
-#         plt.show()
-#     elif not type_col_dict:
-#         fig, ax = navis.plot2d(nl_cmap[0],  method='3d_complex')
-#         #zoom
-#         ax.dist = 6
-#         #adjust perspective
-#         for angle in range (0, 360, -87):
-#             ax.azim= angle
-#         for angle in range (0, 360, -73):
-#             ax.elev= angle
-#         print_to_output(args.outputfile)
-#         plt.show()
-# elif not args.vol:
-#     if type_col_dict:
-#         fig, ax = navis.plot2d(nl_cmap[0], color=nl_cmap[1], method ='3d_complex')
-#         # zoom
-#         ax.dist = 6
-#         # adjust perspective
-#         for angle in range(0, 360, -87):
-#             ax.azim = angle
-#         for angle in range(0, 360, -73):
-#             ax.elev = angle
-#         print_to_output(args.outputfile)
-#         plt.show()
-#     elif not type_col_dict:
-#         fig, ax = navis.plot2d(nl_cmap[0],  method='3d_complex')
-#         #zoom
-#         ax.dist = 6
-#         #adjust perspective
-#         for angle in range (0, 360, -87):
-#             ax.azim= angle
-#         for angle in range (0, 360, -73):
-#             ax.elev= angle
-#         print_to_output(args.outputfile)
-#         plt.show()
-#
-
-
