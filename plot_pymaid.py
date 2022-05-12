@@ -61,7 +61,7 @@ parser.add_argument('-v', '--version',
                     version='%(prog)s 1.0')
 #make sure number
 #
-req_arg.add_argument('-p', '--project_id',
+req_arg.add_argument('-i', '--project_id',
                     metavar='PROJECT_ID',
                     dest='project_id',
                     required=True,
@@ -97,6 +97,13 @@ parser.add_argument('-f', '--volume_colour',
                     dest='volume_colour',
                     nargs='+',
                     help='User-specified volume colours, currently only RGBA argument accepted (ie. 0,1,0)')
+#this needs to be updated
+parser.add_argument('-p', '--perspective',
+                    metavar='PERSPECTIVE',
+                    dest='perspective',
+                    nargs=3,
+                    help='User-specified perspective for plot, default is 7, -90, 0 for camera distance, vertical rotational angle and horizontal rotational angle (ie. 6 87 73)')
+
 #creates the optinal argument for output file name
 parser.add_argument('-o', '--output',
                     metavar='OUTPUT',
@@ -133,8 +140,8 @@ def print_to_output(outputfile=None):
 def neuron_by_annotation(annotation=None):
     # print(nl)
     cmap = {}
+    nl = pymaid.CatmaidNeuronList(None)
     if isinstance(annotation,dict):
-        nl = pymaid.CatmaidNeuronList(None)
         for key, value in annotation.items():
             skids = pymaid.get_skids_by_annotation(f'/{key}')
             # print(skids)
@@ -149,13 +156,14 @@ def neuron_by_annotation(annotation=None):
     elif isinstance(annotation,list):
         for annot in annotation:
             skids = pymaid.get_skids_by_annotation(f'/{annot}')
-            nl = pymaid.get_neurons(skids)
+            nl += pymaid.get_neurons(skids)
         # print(nl)
     return nl, cmap
 
 #regex
 def neuron_by_name(neuron_list=None):
     cmap = {}
+    nl = pymaid.CatmaidNeuronList(None)
     if isinstance(neuron_list, dict):
         nl = pymaid.CatmaidNeuronList(None)
         for key, value in neuron_list.items():
@@ -171,7 +179,7 @@ def neuron_by_name(neuron_list=None):
     elif isinstance(neuron_list, list):
         for neuron in neuron_list:
             # print(neuron)
-            nl = pymaid.get_neurons(f'/{neuron}')
+            nl += pymaid.get_neurons(f'/{neuron}')
     # print(nl)
     return nl, cmap
 
@@ -237,34 +245,37 @@ def colour_parser(colour_choice=None, num_check=None):
     # print(type_col_dict)
     return type_col_dict
 
-def angle_build(axis=None, distance=None,azimuth=None, elevation=None):
+def angle_build(axis=None, perspective_list=None):
+    perspective_list = [int(x) for x in perspective_list]
     # zoom
-    axis.dist = distance
+    axis.dist = perspective_list[0]
     # adjust perspective
-    for angle in range(0, 360, azimuth):
+    for angle in range(0, 360, perspective_list[1]):
         axis.azim = angle
-    for angle in range(0, 360, elevation):
+    for angle in range(0, 360, perspective_list[2]):
         axis.elev = angle
     return axis
 
-def figure_build(neuron_list=None,volume=None):#colour=None):
+def figure_build(neuron_list=None,volume=None, perspective=None):
+    if not perspective:
+        perspective=[7,-90,360]
     if volume:
         if neuron_list[1]:
             # print([neuron_list[0], volume],)
             fig, ax = navis.plot2d([neuron_list[0], volume], color=neuron_list[1], method='3d_complex')
             #angle don't work
             #doesn\t work with multiple volumes
-            ax = angle_build(ax, 6, -87, -73)
+            ax = angle_build(ax, perspective)
         elif not neuron_list[1]:
             fig, ax = navis.plot2d([neuron_list[0], volume], method='3d_complex')
-            ax = angle_build(ax, 6, -87, -73)
+            ax = angle_build(ax, perspective)
     elif not volume:
         if neuron_list[1]:
             fig, ax = navis.plot2d(neuron_list[0], color=neuron_list[1], method='3d_complex')
-            ax = angle_build(ax, 6, -87, -73)
+            ax = angle_build(ax, perspective)
         elif not neuron_list[1]:
             fig, ax = navis.plot2d(neuron_list[0], method='3d_complex')
-            ax = angle_build(ax, 10, -87, -73)
+            ax = angle_build(ax, perspective)
     print_to_output(args.outputfile)
     plt.show()
 
@@ -303,6 +314,6 @@ if args.volume:
         volume=volume_build(vol_colour_dict)
     elif not args.volume_colour:
         volume = volume_build(args.volume)
-    figure_build(nl_cmap,volume)
+    figure_build(nl_cmap,volume,args.perspective)
 elif not args.volume:
-    figure_build(nl_cmap)
+    figure_build(nl_cmap,perspective=args.perspective)
