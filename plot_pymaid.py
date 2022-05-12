@@ -32,6 +32,7 @@ known error:
     6. configuration file json
         https://stackoverflow.com/questions/11154946/require-either-of-two-arguments-using-argparse
     9. need some threshold, so not to break computer
+    10. make regex and non regex option
  """
 
 # Press the green button in the gutter to run the script.
@@ -146,9 +147,10 @@ def neuron_by_annotation(annotation=None):
             cmap= {**cmap,**tempcmap}
         # print(cmap)
     elif isinstance(annotation,list):
-        skids = pymaid.get_skids_by_annotation(f'/{annotation}')
-        nl = pymaid.get_neurons(skids)
-    # print(nl)
+        for annot in annotation:
+            skids = pymaid.get_skids_by_annotation(f'/{annot}')
+            nl = pymaid.get_neurons(skids)
+        # print(nl)
     return nl, cmap
 
 #regex
@@ -167,18 +169,25 @@ def neuron_by_name(neuron_list=None):
             cmap = {**cmap, **tempcmap}
         # print(cmap)
     elif isinstance(neuron_list, list):
-        nl = pymaid.get_neurons(f'/{neuron_list}')
+        for neuron in neuron_list:
+            # print(neuron)
+            nl = pymaid.get_neurons(f'/{neuron}')
     # print(nl)
     return nl, cmap
 
 def volume_build(volume_col_dict=None):
     vol_list=[]
-    for key, value in volume_col_dict.items():
-        # print(key, value)
-        # Retrieve volume
-        vol = pymaid.get_volume(key)
-        if value:
-            vol.color = value
+    if isinstance(volume_col_dict, dict):
+        for key, value in volume_col_dict.items():
+            # print(key, value)
+            # Retrieve volume
+            vol = pymaid.get_volume(key)
+            if value:
+                vol.color = value
+                vol_list.append(vol)
+    elif isinstance(volume_col_dict, list):
+        for volume in volume_col_dict:
+            vol = pymaid.get_volume(volume)
             vol_list.append(vol)
     # print(vol_list)
     return vol_list
@@ -203,29 +212,14 @@ def colour_parser(colour_choice=None, num_check=None):
     num_list = []
     # colour_list=args.colour
     colour_list = []
+    #is if statement this redundant
+    # if colour_choice:
     for colour in colour_choice:
         # print(colour)
         match = re.findall('\.\d|\d', colour)
         # print(match)
         match=[float(x) for x in match]
         print(match)
-        # match="".join(match)
-        # print(match)
-        # for object in colour:
-        #     # print(object)
-        #     try:
-        #         # add option for finding .
-        #         # perhaps a regex would work better here
-        #         if int(object):
-        #             object = int(object)
-        #             # print(object)
-        #             num_list.append(object)
-        #         elif object == '0':
-        #             object = int(object)
-        #             # print(object)
-        #             num_list.append(object)
-        #     except ValueError:
-        #         pass
         num_tup = tuple(match)
         # print(num_tup)
         colour_list.append(num_tup)
@@ -237,6 +231,9 @@ def colour_parser(colour_choice=None, num_check=None):
             exit()
         elif len(num_check) == len(colour_list):
             type_col_dict[num_check[number]]=colour_list[number]
+    # elif not colour_choice:
+    #     for number in range(0, len(num_check)):
+    #         type_col_dict[num_check[number]] = 0
     # print(type_col_dict)
     return type_col_dict
 
@@ -267,7 +264,7 @@ def figure_build(neuron_list=None,volume=None):#colour=None):
             ax = angle_build(ax, 6, -87, -73)
         elif not neuron_list[1]:
             fig, ax = navis.plot2d(neuron_list[0], method='3d_complex')
-            ax = angle_build(ax, 6, -87, -73)
+            ax = angle_build(ax, 10, -87, -73)
     print_to_output(args.outputfile)
     plt.show()
 
@@ -300,11 +297,12 @@ elif not args.annotation:
 
 if args.volume:
     #no if statement needed, even when no args.volume_colour provided
-    vol_colour_dict=colour_parser(args.volume_colour, args.volume)
-    # print(colour_list)
-    volume=volume_build(vol_colour_dict)
-    # elif not args.volume_colour:
-    #     volume = volume_build(args.volume, args.volume_colour)
+    if args.volume_colour:
+        vol_colour_dict=colour_parser(args.volume_colour, args.volume)
+        # print(colour_list)
+        volume=volume_build(vol_colour_dict)
+    elif not args.volume_colour:
+        volume = volume_build(args.volume)
     figure_build(nl_cmap,volume)
 elif not args.volume:
     figure_build(nl_cmap)
