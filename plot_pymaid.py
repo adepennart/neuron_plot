@@ -379,6 +379,9 @@ def figure_build(neuron_data=None,volume=None, perspective=None):
     print_to_output(args.outputfile)
     plt.show() #plot figure
 
+# variables
+# --------------------------------------------------------------------------------------
+neur_col_dict={}
 # main code
 # --------------------------------------------------------------------------------------
 rm = pymaid.connect_catmaid(project_id=args.project_id)#open Catmaid to project id
