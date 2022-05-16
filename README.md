@@ -1,4 +1,3 @@
-
 ## Installation
 This program is useful for ploting 2D representations of catmaid neurons, and reproducing these plots.
 
@@ -92,8 +91,8 @@ The rest of the arguments are optional.
 
 ANNOTATION, when annotations are how you are looking for neurons as opposed to by name.
 ```bash=
-python plot_pymaid.py -i PROJECT_ID (-j JSON | -n NEURON) 
-                      -a
+python plot_pymaid.py -i PROJECT_ID -j JSON -a
+python plot_pymaid.py -i PROJECT_ID -n NEURON -a
 ```
 
 Volume, for when you want to depict volumes in your plot.
@@ -106,30 +105,74 @@ COLOUR and VOLUME_COLOUR for when you want to have a specific colour for the neu
 python plot_pymaid.py -i PROJECT_ID -j JSON -c COLOUR
 python plot_pymaid.py -i PROJECT_ID -n NEURON -c COLOUR
 
-python plot_pymaid.py -i PROJECT_ID -j JSON -V VOLUME
-                      -C VOLUME_COLOUR
-python plot_pymaid.py -i PROJECT_ID -n NEURON -V VOLUME
-                      -C VOLUME_COLOUR
+python plot_pymaid.py -i PROJECT_ID -j JSON -V VOLUME -C VOLUME_COLOUR
+python plot_pymaid.py -i PROJECT_ID -n NEURON -V VOLUME -C VOLUME_COLOUR
 ```                      
 PERSPECTIVE, for when you want a specific view of the neurons in your plot.
 ```bash=
-python plot_pymaid.py -i PROJECT_ID (-j JSON | -n NEURON) 
-                      -p PERSPECTIVE
+python plot_pymaid.py -i PROJECT_ID -j JSON -p PERSPECTIVE
+python plot_pymaid.py -i PROJECT_ID -n NEURON -p PERSPECTIVE
 ```
 Finally, OUTPUT, a output plot will be created with the specificied file name.
 ```bash=
-python plot_pymaid.py -i PROJECT_ID (-j JSON | -n NEURON)
-                      -o OUTPUT
+python plot_pymaid.py -i PROJECT_ID -j JSON -o OUTPUT
+python plot_pymaid.py -i PROJECT_ID -n NEURON -o OUTPUT
 ```
 
 ### example inputs
 
+If interested in all E-PG neurons in your project and example input could be the following 
+```bash=
+python3 plot_pymaid.py -i 8 -n EPG 
+```
 
-for the perfect view
+If a json file has been produced from Catmaid with all your neurons of interest it could be used as followed
+```bash=
+python3 plot_pymaid.py -i 8 -j example.json 
+```
+
+Perhaps we are interested in seraching neurons by annotations
+```bash=
+python3 plot_pymaid.py -i 11 -n EPG -a
+```
+
+
+Perhaps there are two type of neurons you are interested in.
+```bash=
+python3 plot_pymaid.py -i 8 -n EPG PEN
+```
+Distinguishing them with colour, might be useful
+```bash=
+python3 plot_pymaid.py -i 8 -n EPG PEN -c 1,0,0 0,0,1
+```
+
+Why not a new perspective on the neurons
+```bash=
+python3 plot_pymaid.py -i 8 -n EPG -p 6 -90 360
+```
+
+Could be interesting to visualize with a volume
+```bash=
+python3 plot_pymaid.py -i 8 -n EPG -V EB
+```
+
+Why not two
+```bash=
+python3 plot_pymaid.py -i 8 -n EPG -V EB PB
+```
+The colouring is off, let's change it
+```bash=
+python3 plot_pymaid.py -i 8 -n EPG -V EB PB -C 0,0,1,0.1 0,0,1,0.1
+```
+
+Taking into account all the options a final view could be created with this
 ```bash=
 python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,.2
 ```
 
-show you can search for 1 or more neurons, 1 or more volumes
+If content with this final view, why not save it to output
+```bash=
+python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,.2 -o satisfied
+```
 
 ### example output
