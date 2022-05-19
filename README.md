@@ -1,9 +1,11 @@
-## Installation
+## About
 This program is useful for ploting 2D representations of catmaid neurons, and reproducing these plots.
 
 This program can be directly installed from github (green code button, top right).
 
 This program is fully run on the terminal.
+
+## Installation
 ### Conda environment
 First make sure conda is installed. If you do not have conda, refer to online resources on how to install conda.
 
