@@ -143,11 +143,15 @@ If a json file has been produced from Catmaid with all your neurons of interest 
 python3 plot_pymaid.py -i 8 -j example.json 
 ```
 
+If the json file neuron colours are not to your liking, you can not use them.
+```bash=
+python3 plot_pymaid.py -i 8 -j example.json -J
+```
+
 Perhaps we are interested in seraching neurons by annotations.
 ```bash=
 python3 plot_pymaid.py -i 11 -n EPG -a
 ```
-
 
 Perhaps there are two type of neurons you are interested in.
 ```bash=
@@ -182,7 +186,7 @@ Taking into account all the options a final view could be created with this.
 python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,.2
 ```
 
-If content with this final view, why not save it to output.
+If content with this final view, why not save it to output and save the hastle of showing it on the screen.
 ```bash=
-python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,.2 -o satisfied
+python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,.2 -o satisfied -s
 ```
