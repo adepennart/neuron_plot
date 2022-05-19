@@ -66,7 +66,7 @@ opt_n_group= parser.add_argument_group(title='optional arguments with neuron')
 #creates the argument for program version
 parser.add_argument('-v', '--version',
                     action='version',
-                    version='%(prog)s 1.0')
+                    version='%(prog)s 1.1')
 #creates the argument where project_id will be inputted
 reqgroup.add_argument('-i', '--project_id',
                     metavar='PROJECT_ID',
