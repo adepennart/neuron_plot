@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Title: plot_pymaid.py
-Date: May 9th, 2022
+Date: May 19th, 2022
 Author: Auguste de Pennart
 Description:
-    plots a 2D representation of the neurons of interest
+    plots a 2D representation of the neuron(s) of interest
 
 List of functions:
     No user defined functions are used in the program.
@@ -20,17 +20,19 @@ Procedure:
 
 Usage:
     python plot_pymaid.py [-h] [-v] -i PROJECT_ID
-                      (-j JSON | -n NEURON [NEURON ...]) [-a]
-                      [-V VOLUME [VOLUME ...]] [-c COLOUR [COLOUR ...]]
+                      (-j JSON | -n NEURON [NEURON ...]) [-J] [-a]
+                      [-c COLOUR [COLOUR ...]] [-V VOLUME [VOLUME ...]]
                       [-C VOLUME_COLOUR [VOLUME_COLOUR ...]]
                       [-p PERSPECTIVE PERSPECTIVE PERSPECTIVE] [-o OUTPUT]
+                      [-s]
 
 known error:
-    9. need some threshold, so not to break computer
-    10. make regex and non regex option, currently standard input is regex and json is not regex
-    11. create an error if no comma found for colours, if i want before the program does
-    13. can put type=int and default=### in argparse
-    14. better naming for search term used for neurons
+    1. no threshold on how many neurons can be looked up, error shown by pymaid code
+    2. no option for regex and non regex, currently standard input is regex and json is not regex
+    3. accepts only RGB colour option, if not provided error shown by pymaid code
+    4. some variable names could be clearer (ie. neur_col_dict)
+    5. error shown by pymaid code when annotation argument used for json file
+    6. does not currently accept more than 1 json file
  """
 
 # Press the green button in the gutter to run the script.
@@ -57,63 +59,77 @@ parser=argparse.ArgumentParser(description=usage)#create an argument parser
 reqgroup= parser.add_argument_group(title='required arguments')
 exgroup = parser.add_argument_group(title='one or the other')
 group = exgroup.add_mutually_exclusive_group(required=True)
-optgroup= parser.add_argument_group(title='optional arguments with project id')
+optgroup= parser.add_argument_group(title='optional arguments')
+opt_j_group= parser.add_argument_group(title='optional arguments with json')
+opt_n_group= parser.add_argument_group(title='optional arguments with neuron')
+
 #creates the argument for program version
 parser.add_argument('-v', '--version',
                     action='version',
                     version='%(prog)s 1.0')
-#make sure number
+#creates the argument where project_id will be inputted
 reqgroup.add_argument('-i', '--project_id',
                     metavar='PROJECT_ID',
                     dest='project_id',
                     required=True,
                     help='user-specified project id (ie. lamarcki_OV)')
-
-#this needs to be updated
+#creates the argument where the json file will be inputted
 group.add_argument('-j', '--json',
                     metavar='JSON',
                     dest='json',
                     help='user-specified catmaid json file')
-#this needs to be updated
+#creates the argument where the neuron(s) be inputted
 group.add_argument('-n', '--neuron',
                     metavar='NEURON',
                     dest='neuron',
                     nargs='+',
-                    help='user-specified Neuron(s) of interest. REGEX accepted. ')
-#this needs to be updated
-optgroup.add_argument('-a', '--annotation',
+                    help='user-specified Neuron(s) of interest. REGEX accepted.')
+#creates the argument whether or not user_specified colour will be used for json files
+opt_j_group.add_argument('-J', '--json_colour',
+                    dest='json_colour',
+                    action='store_false',
+                    default='store_True',
+                    help='option to not use user-specified colours')
+#creates the argument where to search for neurons by annotation and not by name
+opt_n_group.add_argument('-a', '--annotation',
                     dest='annotation',
                     action = 'store_true',
                     help='If looking through annotations and not neuron name, please select. REGEX accepted.')
-#this needs to be updated
+#creates the argument where colour can be inputted for -neuron
+opt_n_group.add_argument('-c', '--colour',
+                    metavar='COLOUR',
+                    dest='colour',
+                    nargs='+',
+                    help='User-specified neuron colours, currently only RGBA argument accepted (ie. 0,1,0,.1)')
+#creates the argument where volume will be inputted
 optgroup.add_argument('-V', '--volume',
                     metavar='VOLUME',
                     dest='volume',
                     nargs='+',
                     help='user-specified Volume(s) of interest')
-#this needs to be updated
-optgroup.add_argument('-c', '--colour',
-                    metavar='COLOUR',
-                    dest='colour',
-                    nargs='+',
-                    help='User-specified neuron colours, currently only RGBA argument accepted (ie. 0,1,0,.1)')
-#this needs to be updated
+#creates the argument where volume colour will be inputted
 optgroup.add_argument('-C', '--volume_colour',
                     metavar='VOLUME_COLOUR',
                     dest='volume_colour',
                     nargs='+',
                     help='User-specified volume colours, currently only RGBA argument accepted (ie. 0,1,0,.1)')
-#this needs to be updated
+#creates the argument where the plot perspective will be inputted
 optgroup.add_argument('-p', '--perspective',
                     metavar='PERSPECTIVE',
                     dest='perspective',
                     nargs=3,
                     help='User-specified perspective for plot, default is 7, -90, 0 for camera distance, vertical rotational angle and horizontal rotational angle (ie. 6 87 73)')
-#creates the optinal argument for output file name
+#creates the argument where the output file name will be inputted
 parser.add_argument('-o', '--output',
                     metavar='OUTPUT',
                     dest='outputfile',
                     help='optional plot output file')
+#creates the argument whether to show or not the plot
+parser.add_argument('-s', '--no_show',
+                    dest='no_show',
+                    action='store_false',
+                    default='store_True',
+                    help='option to not show plot')
 args=parser.parse_args()#parses command line
 
 #functions
@@ -135,6 +151,48 @@ def print_to_output(outputfile=None):
     except TypeError:
         pass
 
+# json_parse
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# input variables:
+    #jsonfile:
+        # user-inputted json file
+    #user_colour:
+        #boolean, whether user-specified colours are used or not
+# use:
+    # parses json file
+# return:
+    # neuron_col_dict:
+        # dictionary of objects and colours
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+def json_parse(jsonfile=None, user_colour=None):
+    #variables
+    neur_col_dict = {}
+    jsonfile = open(jsonfile, 'r')
+    json_dict = json.load(jsonfile)
+    # print(json_dict)
+    jsonfile.close()
+    if user_colour:
+        for item in json_dict:
+            if user_colour:
+                for key, value in item.items():
+                    # print(key, value)
+                    if key == 'skeleton_id':
+                        neuron = value
+                    if key == 'color':
+                        RGB = matplotlib.colors.to_rgba(value, item['opacity'])
+                        # print((RGB))
+                        temp_neur_col_dict = colour_parser(RGB, neuron)
+                        neur_col_dict = {**neur_col_dict, **temp_neur_col_dict}
+    elif not user_colour:
+        neur_col_dict = []
+        for item in json_dict:
+            for key, value in item.items():
+                # print(key, value)
+                if key == 'skeleton_id':
+                    neur_col_dict.append(value)
+    print(neur_col_dict)
+    return neur_col_dict
+
 # colour_parser
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # input variables:
@@ -153,7 +211,7 @@ def colour_parser(colour_choice=None, num_check=None):
     neur_col_dict = {}
     colour_list = []
     # for standard input
-    if not isinstance(colour_choice, tuple):
+    if isinstance(colour_choice, list):
         for colour in colour_choice:
             match = re.findall('\d[\.]\d*|[\d]', colour)
             match = [float(x) for x in match]
@@ -163,13 +221,20 @@ def colour_parser(colour_choice=None, num_check=None):
     elif isinstance(colour_choice, tuple):
         num_check = [num_check]
         colour_list = [colour_choice]
-    # print(colour_list, num_check)
-    for number in range(0, len(num_check)): #ensures same number of colours to objects to be coloured
-        if len(num_check) != len(colour_list):
-            print("same number of neurons and colours needed")
+    print(colour_list, num_check)
+    if not colour_choice==None:
+        try:
+            if len(num_check) == len(colour_list):
+                for number in range(0, len(num_check)):  # ensures same number of colours to objects to be coloured
+                    neur_col_dict[num_check[number]] = colour_list[number]
+            elif len(num_check) != len(colour_list):
+                print("same number of neurons/volumes and colours needed")
+                exit()
+        except TypeError:
+            print('colour but no neuron/volume provided, try again')
             exit()
-        elif len(num_check) == len(colour_list):
-            neur_col_dict[num_check[number]] = colour_list[number]
+    elif colour_choice==None:
+        neur_col_dict=num_check
     # print(neur_col_dict)
     return neur_col_dict
 
@@ -265,7 +330,6 @@ def neuron_by_name(neuron_data=None):
             #for standard input
             if not isinstance(neuron, int):
                 tempnl = pymaid.get_neurons(f'/{neuron}') # retrieve neuron(s)
-
                 # print(tempnl.id)
             #for json
             elif isinstance(neuron, int):
@@ -279,7 +343,13 @@ def neuron_by_name(neuron_data=None):
     elif isinstance(neuron_data, list):
         for neuron in neuron_data:
             # print(neuron)
-            nl += pymaid.get_neurons(f'/{neuron}') # retrieve neuron(s)
+            # for standard input
+            if not isinstance(neuron, int):
+                nl += pymaid.get_neurons(f'/{neuron}') # retrieve neuron(s)
+            # for json
+            elif isinstance(neuron, int):
+                neuron = [neuron]
+                nl += pymaid.get_neurons(neuron) # retrieve neuron(s)
     # print(nl)
     return nl, cmap
 
@@ -353,12 +423,14 @@ def angle_build(axis=None, perspective_list=None):
         # volume data from catmaid database
     #perspective:
         # list of figure distance, azimuth and elevation
+    #show_plot:
+        #boolean, whether plot is displayed or not
 # use:
     # create figure
 # return:
     # no return
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def figure_build(neuron_data=None,volume=None, perspective=None):
+def figure_build(neuron_data=None,volume=None, perspective=None,show_plot=None):
     if not perspective:
         perspective=[7,-90,360]
     if volume:
@@ -377,55 +449,25 @@ def figure_build(neuron_data=None,volume=None, perspective=None):
             ax = angle_build(ax, perspective)
     # print(ax)
     print_to_output(args.outputfile)
-    plt.show() #plot figure
+    if show_plot:
+        plt.show()  # plot figure
 
 # variables
 # --------------------------------------------------------------------------------------
 neur_col_dict={}
+volume=None
 # main code
 # --------------------------------------------------------------------------------------
 rm = pymaid.connect_catmaid(project_id=args.project_id)#open Catmaid to project id
 
 if args.json:
-    neur_col_dict={}
-    inputted = open(args.json, 'r')
-    json_file = json.load(inputted)
-    # print(json_file)
-    inputted.close()
-    for item in json_file:
-        for key, value in item.items():
-            # print(key, value)
-            if key == 'skeleton_id':
-                neuron=value
-            if key == 'color':
-                RGB=matplotlib.colors.to_rgba(value,item['opacity'])
-                # print((RGB))
-                temp_neur_col_dict=colour_parser(RGB,neuron)
-                neur_col_dict = {**neur_col_dict, **temp_neur_col_dict}
+    neur_col_dict=json_parse(args.json,args.json_colour)
+elif args.neuron:
+    neur_col_dict = colour_parser(args.colour, args.neuron)
+if args.annotation:
+    nl_cmap=neuron_by_annotation(neur_col_dict)
+elif not args.annotation:
     nl_cmap=neuron_by_name(neur_col_dict)
-
-#is this needed?
-if args.colour:
-    neur_col_dict=colour_parser(args.colour, args.neuron)
-
-if not args.json:
-    if args.annotation:
-        if neur_col_dict:
-            nl_cmap=neuron_by_annotation(neur_col_dict)
-        elif not neur_col_dict:
-            nl_cmap = neuron_by_annotation(args.neuron)
-    elif not args.annotation:
-        if neur_col_dict:
-            nl_cmap=neuron_by_name(neur_col_dict)
-        elif not neur_col_dict:
-            nl_cmap = neuron_by_name(args.neuron)
-
-if args.volume:
-    if args.volume_colour:
-        vol_colour_dict=colour_parser(args.volume_colour, args.volume)
-        volume=volume_build(vol_colour_dict)
-    elif not args.volume_colour:
-        volume = volume_build(args.volume)
-    figure_build(nl_cmap,volume,args.perspective)
-elif not args.volume:
-    figure_build(nl_cmap,perspective=args.perspective)
+vol_colour_dict = colour_parser(args.volume_colour, args.volume)
+volume = volume_build(vol_colour_dict)
+figure_build(nl_cmap, volume, args.perspective, args.no_show)
