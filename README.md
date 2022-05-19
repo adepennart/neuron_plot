@@ -1,13 +1,13 @@
 ## About
 This program is useful for ploting 2D representations of catmaid neurons, and reproducing these plots.
 
-This program can be directly installed from github (green code button, top right).
+This program can be directly installed from github (green Code button, top right).
 
 This program is fully run on the terminal.
-
 ## Installation
 ### Conda environment
 First make sure conda is installed. If you do not have conda, refer to online resources on how to install conda.
+https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
 
 Once installed, we can make a conda environment.
 
@@ -69,11 +69,12 @@ The script should be all ready to run.
 ### Input
 The code can be run as follows
 ```bash=
-python plot_pymaid.py [-h] [-v] -i PROJECT_ID
-                      (-j JSON | -n NEURON [NEURON ...]) [-a]
-                      [-V VOLUME [VOLUME ...]] [-c COLOUR [COLOUR ...]]
+    python plot_pymaid.py [-h] [-v] -i PROJECT_ID
+                      (-j JSON | -n NEURON [NEURON ...]) [-J] [-a]
+                      [-c COLOUR [COLOUR ...]] [-V VOLUME [VOLUME ...]]
                       [-C VOLUME_COLOUR [VOLUME_COLOUR ...]]
                       [-p PERSPECTIVE PERSPECTIVE PERSPECTIVE] [-o OUTPUT]
+                      [-s]
 ```
 The help page can be accessed with the -h or --help flag
 ```bash=
@@ -90,9 +91,14 @@ There are two required arguments for running this program, PROJECT_ID and JSON o
 python plot_pymaid.py -i PROJECT_ID -j JSON
 python plot_pymaid.py -i PROJECT_ID -n NEURON
 ```
+
 The following arguments are optional.
 
-ANNOTATION, when annotations are how you are looking for neurons as opposed to by name (not useable with json).
+JSON_COLOUR, when user-specified neuron colours are not wanted (only useable with JSON).
+```bash=
+python plot_pymaid.py -i PROJECT_ID -j JSON -J
+```
+ANNOTATION, when annotations are how you are looking for neurons as opposed to by name (only useable with NEURON).
 ```bash=
 python plot_pymaid.py -i PROJECT_ID -n NEURON -a
 ```
@@ -102,7 +108,7 @@ VOLUME, when you want to depict volumes in your plot.
 python plot_pymaid.py -i PROJECT_ID -j JSON -V VOLUME
 python plot_pymaid.py -i PROJECT_ID -n NEURON -V VOLUME
 ```
-COLOUR and VOLUME_COLOUR, when you want to have a specific colour for the neurons and the volumes respectively (COLOUR, not useable with json).
+COLOUR and VOLUME_COLOUR, when you want to have a specific colour for the neurons and the volumes respectively (COLOUR, only useable with NEURON).
 ```bash=
 python plot_pymaid.py -i PROJECT_ID -n NEURON -c COLOUR
 
@@ -114,10 +120,15 @@ PERSPECTIVE, when you want a specific view of the neurons in your plot.
 python plot_pymaid.py -i PROJECT_ID -j JSON -p PERSPECTIVE
 python plot_pymaid.py -i PROJECT_ID -n NEURON -p PERSPECTIVE
 ```
-Finally, OUTPUT, a output plot will be created with the specified file name.
+OUTPUT, a output plot will be created with the specified file name.
 ```bash=
 python plot_pymaid.py -i PROJECT_ID -j JSON -o OUTPUT
 python plot_pymaid.py -i PROJECT_ID -n NEURON -o OUTPUT
+```
+Finally, NO_SHOW, when you don't want your plot displayed to screen.
+```bash=
+python plot_pymaid.py -i PROJECT_ID -j JSON -s
+python plot_pymaid.py -i PROJECT_ID -n NEURON -s
 ```
 
 ### Example inputs
