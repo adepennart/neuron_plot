@@ -1,3 +1,0 @@
-3	bumblebee	6 57 5
-11	lamarcki	6 -90 -38
-8	megalopta	6 -97 -78
