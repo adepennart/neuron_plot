@@ -7,7 +7,7 @@ This program is fully run on the terminal.
 
 ## Before starting
 
-A **Catmaid account** are needed for this code.
+A **Catmaid account** is needed for this code.
 
 Before downloading this repository it should be stated that without a Catmaid account following the instructions below becomes obsolete. This account allows access to the neuron database.
 
