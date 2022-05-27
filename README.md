@@ -4,6 +4,15 @@ This program is useful for ploting 2D representations of catmaid neurons, and re
 This program can be directly installed from github (green Code button, top right).
 
 This program is fully run on the terminal.
+
+## Before starting
+
+A **neuPRINT and Catmaid account** are needed for this code.
+
+Before downloading this repository it should be stated that without a Catmaid account following the instructions below becomes obsolete. This account allows access to the neuron databases.
+
+For a **Catmaid account**, please contact me at adepennnart@gmail.com, stating you would like to open an account to access our Catmaid database.
+
 ## Installation
 ### Conda environment
 First make sure conda is installed. If you do not have conda, refer to online resources on how to install conda.
