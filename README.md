@@ -24,12 +24,6 @@ conda create --name pymaid
 conda activate pymaid
 ```
 
-Create a directory for pymaid.
-```bash=
-mkdir pymaid
-cd pymaid
-```
-
 ### Python version
 The python version for running this script is python=3.6
 ```bash=
