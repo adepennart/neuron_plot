@@ -9,7 +9,7 @@ This program is fully run on the terminal.
 
 A **Catmaid account** is needed for this code.
 
-Before downloading this repository it should be stated that without a Catmaid account following the instructions below becomes obsolete. This account allows access to the neuron database.
+Before downloading this repository it should be stated that without a Catmaid account following the instructions below becomes obsolete.
 
 ## Installation
 ### Conda environment
