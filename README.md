@@ -7,11 +7,9 @@ This program is fully run on the terminal.
 
 ## Before starting
 
-A **neuPRINT and Catmaid account** are needed for this code.
+A **Catmaid account** are needed for this code.
 
-Before downloading this repository it should be stated that without a Catmaid account following the instructions below becomes obsolete. This account allows access to the neuron databases.
-
-For a **Catmaid account**, please contact me at adepennnart@gmail.com, stating you would like to open an account to access our Catmaid database.
+Before downloading this repository it should be stated that without a Catmaid account following the instructions below becomes obsolete. This account allows access to the neuron database.
 
 ## Installation
 ### Conda environment
