@@ -114,7 +114,7 @@ def json_parse(jsonfile=None, user_colour=None):
                 # print(key, value)
                 if key == 'skeleton_id':
                     neur_col_dict.append(value)
-    print(neur_col_dict)
+    # print(neur_col_dict)
     return neur_col_dict
 
 # colour_parser
@@ -146,7 +146,7 @@ def colour_parser(colour_choice=None, num_check=None):
     elif isinstance(colour_choice, tuple):
         num_check = [num_check]
         colour_list = [colour_choice]
-    print(colour_list, num_check)
+    # print(colour_list, num_check)
     if not colour_choice==None:
         try:
             if len(num_check) == len(colour_list):
