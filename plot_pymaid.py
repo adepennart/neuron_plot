@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Title: plot_pymaid.py
-Date: May 19th, 2022
+Date: May 27th, 2022
 Author: Auguste de Pennart
 Description:
-    plots a 2D representation of the neuron(s) of interest
+    plots a 2D representation of the catmaid neuron(s) of interest
 
 List of functions:
     No user defined functions are used in the program.
@@ -166,4 +166,4 @@ elif not args.annotation:
     nl, cmap=neuron_by_name(neur_col_dict)
 vol_colour_dict = colour_parser(args.volume_colour, args.volume)
 volume = volume_build(vol_colour_dict)
-figure_build(nl, cmap, volume, args.perspective, args.no_show)
+figure_build(nl, cmap, volume, args.perspective, args.no_show,args.outputfile)
