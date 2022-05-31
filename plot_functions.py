@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Title: plot_pymaid.py
-Date: May 19th, 2022
+Title: plot_functions.py
+Date: May 27th, 2022
 Author: Auguste de Pennart
 Description:
-    plots a 2D representation of the neuron(s) of interest
+    functions for plotting a 2D representation of the neuron(s) of interest
 
 List of functions:
     print_to_output:
@@ -67,10 +67,11 @@ if __name__ == '__main__':
     # no return
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def print_to_output(outputfile=None):
+    #import modules
     import matplotlib.pyplot as plt
     try:
         plt.savefig(f'{outputfile}.pdf', transparent=True)
-    except TypeError:
+    except not TypeError:
         pass
 
 # json_parse
@@ -87,6 +88,7 @@ def print_to_output(outputfile=None):
         # dictionary of objects and colours
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def json_parse(jsonfile=None, user_colour=None):
+    #import modules
     import json
     import matplotlib.colors
     #variables
@@ -131,6 +133,7 @@ def json_parse(jsonfile=None, user_colour=None):
         # dictionary of objects and colours
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def colour_parser(colour_choice=None, num_check=None):
+    #import modules
     import re
     # variables
     neur_col_dict = {}
@@ -206,6 +209,7 @@ def colour_neuron(neuron_data=None,colour=None):
         # associated user-inputted neuron colour (if applicable)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def neuron_by_annotation(annotation=None):
+    #import modules
     import pymaid
     #variables
     cmap = {}
@@ -246,6 +250,7 @@ def neuron_by_annotation(annotation=None):
         # associated user-inputted neuron colour (if applicable)
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def neuron_by_name(neuron_data=None):
+    #import modules
     import pymaid
     #variables
     cmap = {}
@@ -294,6 +299,8 @@ def neuron_by_name(neuron_data=None):
         # volume data from catmaid database
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def volume_build(volume_data=None):
+    #import modules
+    import pymaid
     #variables
     vol_list=[]
     #for user-input volume colour(s)
@@ -358,6 +365,7 @@ def angle_build(axis=None, perspective_list=None):
     # no return
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 def figure_build(neuron_data=None,colour=None,volume=None, perspective=None,show_plot=None,outputfile=None):
+    #import modules
     import matplotlib.pyplot as plt
     import navis
     if not perspective:
@@ -377,7 +385,7 @@ def figure_build(neuron_data=None,colour=None,volume=None, perspective=None,show
             fig, ax = navis.plot2d(neuron_data, method='3d_complex') #setup figure
             ax = angle_build(ax, perspective)
     # print(ax)
-    print_to_output(outputfile)
+    if outputfile:
+        print_to_output(outputfile)
     if show_plot:
         plt.show()  # plot figure
-
