@@ -1,8 +1,6 @@
 ## About
 This program is useful for ploting 2D representations of catmaid neurons, and reproducing these plots.
 
-This program can be directly installed from github (green Code button, top right).
-
 This program is fully run on the terminal.
 
 ## Before starting
@@ -12,6 +10,13 @@ A **Catmaid account** is needed for this code.
 Before downloading this repository it should be stated that without a Catmaid account following the instructions below becomes obsolete.
 
 ## Installation
+This program can be directly installed from github (green Code button, top right).
+
+Make sure to change into the downloaded directory, the code should resemble something like this.
+```bash=
+cd Downloads/neuron_print
+```
+
 ### Conda environment
 First make sure conda is installed. If you do not have conda, refer to online resources on how to install conda.
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
@@ -63,12 +68,12 @@ Don't forget to source.
 ```bash=
 source ~/.bash_profile
 ```
-
+Verify after sourcing that you are still in your pymaid conda environment.
 The script should be all ready to run.
 
 ## Usage
 ### Input
-The code can be run as follows
+The code can be run as follows (most arguments are optional, see below).
 ```bash=
     python plot_pymaid.py [-h] [-v] -i PROJECT_ID
                       (-j JSON | -n NEURON [NEURON ...]) [-J] [-a]
@@ -109,14 +114,14 @@ VOLUME, when you want to depict volumes in your plot.
 python plot_pymaid.py -i PROJECT_ID -j JSON -V VOLUME
 python plot_pymaid.py -i PROJECT_ID -n NEURON -V VOLUME
 ```
-COLOUR and VOLUME_COLOUR, when you want to have a specific colour for the neurons and the volumes respectively (COLOUR, only useable with NEURON).
+COLOUR and VOLUME_COLOUR, when you want to have a specific colour for the neurons and the volumes respectively (COLOUR, only useable with NEURON). Only accepts colours as RBG (ie. 1,0,0,0.1).
 ```bash=
 python plot_pymaid.py -i PROJECT_ID -n NEURON -c COLOUR
 
 python plot_pymaid.py -i PROJECT_ID -j JSON -V VOLUME -C VOLUME_COLOUR
 python plot_pymaid.py -i PROJECT_ID -n NEURON -V VOLUME -C VOLUME_COLOUR
 ```                      
-PERSPECTIVE, when you want a specific view of the neurons in your plot.
+PERSPECTIVE, when you want a specific view of the neurons in your plot. Only accepts 3 arguments: zoom, rotation around y-axis and rotation around x-axis.
 ```bash=
 python plot_pymaid.py -i PROJECT_ID -j JSON -p PERSPECTIVE
 python plot_pymaid.py -i PROJECT_ID -n NEURON -p PERSPECTIVE
