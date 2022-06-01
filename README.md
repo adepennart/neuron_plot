@@ -189,10 +189,10 @@ python3 plot_pymaid.py -i 8 -n EPG -V EB PB -C 0,0,1,0.1 0,0,1,0.1
 
 Taking into account all the options a final view could be created with this.
 ```bash=
-python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,.2
+python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,0.2
 ```
 
 If content with this final view, why not save it to output and save the hastle of showing it on the screen.
 ```bash=
-python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,.2 0,1,0,.2 -o satisfied -s
+python3 plot_pymaid.py -i 11 -n EPG PEN -a -V EB PB -p 7 300 310 -C 0,1,0,0.2 0,1,0,0.2 -o satisfied -s
 ```
