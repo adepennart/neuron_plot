@@ -60,6 +60,7 @@ Add your new environmental variables via the bash_profile file.
 nano ~/.bash_profile
 ```
 When in nano, add the following lines to your code, with  respect to your account. 
+
 (EDIT) http user and password are new requirements since 08/2024
 ```bash=
 export CATMAID_SERVER='https://www.your.catmaid-server.org'
